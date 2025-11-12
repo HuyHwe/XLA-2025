@@ -1,0 +1,8 @@
+fastapi==0.115.8
+fastapi-cors==0.0.6
+uvicorn[standard]==0.34.0
+tensorflow==2.20.0
+numpy==2.3.3
+pillow==11.1.0
+scipy==1.15.2
+

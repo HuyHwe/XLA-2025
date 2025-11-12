@@ -1,1 +1,11 @@
-.venv
+# Python venv
+.venv/
+venv/
+   
+# Node modules
+frontend/node_modules/
+   
+# Build output
+frontend/build/
+backend/__pycache__/
+*.pyc
