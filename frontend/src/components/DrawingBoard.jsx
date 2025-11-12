@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import "./DrawingBoard.css";
+import "../styles/DrawingBoard.css";
 
 const CANVAS_SIZE = 280;
 const STROKE_STYLE = "#ffffff";
