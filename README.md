@@ -10,7 +10,7 @@
 
 ### Backend
 ```bash
-cd XLA-2025/backend
+cd XLA-2025
 python -m venv .venv
 .venv\Scripts\activate  # Windows
 pip install -r requirements.txt
@@ -26,8 +26,8 @@ npm install
 
 ### Backend
 ```bash
-cd XLA-2025/backend
-uvicorn main:app --host 127.0.0.1 --port 9000 --reload
+cd XLA-2025
+uvicorn backend.main:app --host 127.0.0.1 --port 9000 --reload
 ```
 
 - API hoạt động tại `http://127.0.0.1:9000`.
@@ -55,28 +55,13 @@ npm start
 - `src/styles/`: `global.css` và `AppLayout.css` cấu hình nền, font, bố cục.
 - Tạo project bằng CRA, đã loại bỏ file boilerplate.
 
-## 5. Test API Bằng curl / Postman
-
-```bash
-curl -X POST http://127.0.0.1:9000/predict \
-  -H "Content-Type: application/json" \
-  -d "{\"image_base64\":\"data:image/png;base64,....\"}"
-```
-
-Hoặc dùng Postman: POST JSON `{ "image_base64": "data:image/png;base64,..." }`.
-
-## 6. Huấn Luyện / Điều Chỉnh Mô Hình
+## 5. Huấn Luyện / Điều Chỉnh Mô Hình
 
 - Notebook `XLA.ipynb` mô tả toàn bộ quy trình huấn luyện và lưu `cnn_model.pkl`.
 - Muốn huấn luyện lại: chạy notebook, cập nhật file `.pkl` trong thư mục `XLA-2025`.
 
-## 7. Ghi Chú Tiền Xử Lý
 
-- Giữ nét trắng trên nền đen để khớp với MNIST.
-- Canvas front-end 280×280, line width 20–22, đầu bút round.
-- Resize dùng `Image.LANCZOS` để giữ độ mượt khi thu nhỏ.
-
-## 8. Cấu Trúc Thư Mục
+## 6. Cấu Trúc Thư Mục
 
 ```
 XLA-2025/
@@ -102,12 +87,5 @@ XLA-2025/
          └─ AppLayout.css
 ```
 
----
-
-## 9. Future Ideas
-
-- Bổ sung hiển thị xác suất từng class.
-- Lưu lịch sử các lần dự đoán.
-- Triển khai Docker để chạy đồng thời backend & frontend.
 
 
