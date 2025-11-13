@@ -15,7 +15,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from PIL import Image, ImageOps
+from PIL import Image, ImageFilter
 
 from . import model_defs
 from .model_defs import Convolution, MaxPool, Fully_Connected
@@ -84,10 +84,24 @@ def _preprocess_image(image_base64: str) -> np.ndarray:
 
     try:
         with Image.open(io.BytesIO(image_bytes)) as img:
+            # Convert to grayscale
             img = img.convert("L")
-            # img = ImageOps.invert(img)
-            img = img.resize((28, 28))
+        
+            # Center and normalize the digit
+            img = _center_and_normalize_digit(img)
+            
+            # Resize to 28x28 using LANCZOS for better quality
+            img = img.resize((28, 28), Image.Resampling.LANCZOS)
+            
+            # Optional: Apply slight smoothing to reduce artifacts
+            img = img.filter(ImageFilter.SMOOTH_MORE)
+            
+            # Convert to numpy array and normalize to [0, 1]
             image_array = np.array(img, dtype=np.float32) / 255.0
+            
+            # Optional: Enhance contrast (uncomment if needed)
+            image_array = np.clip((image_array - 0.5) * 1.2 + 0.5, 0.0, 1.0)
+            
     except OSError as exc:
         raise HTTPException(status_code=400, detail="Unable to decode image bytes") from exc
 
@@ -95,6 +109,49 @@ def _preprocess_image(image_base64: str) -> np.ndarray:
         raise HTTPException(status_code=400, detail="Processed image has invalid shape")
 
     return image_array
+
+
+def _center_and_normalize_digit(img: Image.Image) -> Image.Image:
+    img_array = np.array(img)
+    
+    # Find bounding box of non-zero (non-background) pixels
+    rows = np.any(img_array > 0, axis=1)
+    cols = np.any(img_array > 0, axis=0)
+    
+    if not np.any(rows) or not np.any(cols):
+        # Empty image, return as is
+        return img
+    
+    top, bottom = np.where(rows)[0][[0, -1]]
+    left, right = np.where(cols)[0][[0, -1]]
+    
+    # Extract digit region
+    digit_region = img_array[top:bottom+1, left:right+1]
+    
+    # Calculate padding to center and add margin
+    height, width = digit_region.shape
+    max_dim = max(height, width)
+    
+    # Add 10% margin on each side
+    margin = int(max_dim * 0.1)
+    new_size = max_dim + 2 * margin
+    
+    # Create centered image
+    centered = np.zeros((new_size, new_size), dtype=img_array.dtype)
+    
+    # Calculate offset to center the digit
+    y_offset = (new_size - height) // 2
+    x_offset = (new_size - width) // 2
+    
+    centered[y_offset:y_offset+height, x_offset:x_offset+width] = digit_region
+    
+    # Resize to original image size while maintaining aspect ratio
+    # This normalizes digit size
+    centered_img = Image.fromarray(centered)
+    original_size = img.size
+    centered_img = centered_img.resize(original_size, Image.Resampling.LANCZOS)
+    
+    return centered_img
 
 
 def _run_inference(image_array: np.ndarray) -> int:

@@ -68,7 +68,7 @@ XLA-2025/
 ├─ XLA.ipynb
 ├─ cnn_model.pkl
 ├─ README.md
-├─ requirements.txt        # Nhiều thư viện tham khảo
+├─ requirements.txt      
 ├─ backend/
 │  ├─ main.py
 │  ├─ model_defs.py
