@@ -7,8 +7,6 @@ from scipy.signal import correlate2d
 
 
 class Convolution:
-    """Simple 2D convolution layer that mirrors the training-time implementation."""
-
     def __init__(self, input_shape, filter_size, num_filters):
         input_height, input_width = input_shape
         self.num_filters = num_filters
