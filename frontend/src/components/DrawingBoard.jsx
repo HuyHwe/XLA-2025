@@ -178,7 +178,7 @@ const DrawingBoard = () => {
     if (currentModel.category === "number") {
       return "Vẽ chữ số (0-9) bằng chuột hoặc trackpad trên bảng bên dưới.";
     } else if (currentModel.category === "shape") {
-      return "Vẽ hình dạng (Tròn, Tam giác, Hình thoi, Hình vuông) bằng chuột hoặc trackpad trên bảng bên dưới.";
+      return "Vẽ hình dạng (Tròn, Tam giác, Sao, Hình vuông) bằng chuột hoặc trackpad trên bảng bên dưới.";
     } else if (currentModel.category === "char") {
       return "Vẽ chữ cái (A-Z) bằng chuột hoặc trackpad trên bảng bên dưới.";
     }
