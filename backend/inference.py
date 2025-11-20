@@ -24,7 +24,7 @@ MODEL_PATH_SHAPE = MODELS_DIR / "cnn_shape.h5"
 MODEL_PATH_CHAR = MODELS_DIR / "cnn_char.h5"
 
 # Class mappings cho các model
-SHAPE_CLASSES = ["Circle", "Diamond", "Square", "Triangle"]
+SHAPE_CLASSES = ["Circle", "Square", "Star", "Triangle"]
 CHAR_CLASSES = [chr(ord("A") + i) for i in range(26)]  # A-Z
 
 # Biến global lưu trữ các model đã load
