@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import "../styles/DrawingBoard.css";
+import ModelSelector from "./ModelSelector";
+import PreprocessPanel from "./PreprocessPanel";
 
 // Các hằng số cấu hình canvas
 const CANVAS_SIZE = 280;  // Kích thước canvas (280x280 pixels)
@@ -12,9 +14,10 @@ const DrawingBoard = () => {
   const canvasRef = useRef(null);  // Reference đến canvas element
   const [isDrawing, setIsDrawing] = useState(false);  // Trạng thái đang vẽ
   const [prediction, setPrediction] = useState(null);  // Kết quả dự đoán
-  const [modelType, setModelType] = useState("custom");  // Model đang chọn
+  const [modelType, setModelType] = useState("number_custom");  // Model đang chọn
   const [availableModels, setAvailableModels] = useState({});  // Danh sách models từ backend
   const [isLoadingModels, setIsLoadingModels] = useState(true);  // Trạng thái đang load models
+  const [preprocessSteps, setPreprocessSteps] = useState([]); // Danh sách ảnh từng bước tiền xử lý
 
   // Khởi tạo canvas khi component mount
   useEffect(() => {
@@ -132,6 +135,7 @@ const DrawingBoard = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     setPrediction(null);  // Reset kết quả
+    setPreprocessSteps([]); // Ẩn khung tiền xử lý
   }, []);
 
   // Gửi ảnh lên backend để nhận diện
@@ -160,79 +164,87 @@ const DrawingBoard = () => {
       // Nhận kết quả dự đoán từ backend
       const result = await response.json();
       setPrediction(result.prediction);
+      setPreprocessSteps(result.preprocessing_steps || []); // Lưu các bước tiền xử lý (nếu có)
     } catch (error) {
       console.error(error);
       setPrediction("Không thể nhận diện – kiểm tra lại backend");
     }
   }, [modelType]);
 
+  // Lấy thông tin model hiện tại
+  const currentModel = availableModels[modelType];
+  const getInstructionText = () => {
+    if (!currentModel) return "Đang tải...";
+    if (currentModel.category === "number") {
+      return "Vẽ chữ số (0-9) bằng chuột hoặc trackpad trên bảng bên dưới.";
+    } else if (currentModel.category === "shape") {
+      return "Vẽ hình dạng (Tròn, Tam giác, Hình thoi, Hình vuông) bằng chuột hoặc trackpad trên bảng bên dưới.";
+    } else if (currentModel.category === "char") {
+      return "Vẽ chữ cái (A-Z) bằng chuột hoặc trackpad trên bảng bên dưới.";
+    }
+    return "Vẽ trên bảng bên dưới.";
+  };
+
+  const hasPreprocessSteps = preprocessSteps && preprocessSteps.length > 0;
+
   return (
-    <div className="drawing-board">
-      <h1>MNIST Handwriting Recognition</h1>
-      <p>Vẽ chữ số (0-9) bằng chuột hoặc trackpad trên bảng bên dưới.</p>
+    <div className={`drawing-page ${hasPreprocessSteps ? "drawing-page--with-steps" : ""}`}>
+      <div className="drawing-page__left">
+        <div className="drawing-board">
+          <h1>Nhận diện Vẽ tay</h1>
+          <p>{getInstructionText()}</p>
 
-      {/* Dropdown chọn model để sử dụng */}
-      <div className="drawing-board__model-selector">
-        <label htmlFor="model-select" className="model-selector__label">
-          Chọn mô hình:
-        </label>
-        <select
-          id="model-select"
-          value={modelType}
-          onChange={(e) => setModelType(e.target.value)}  // Cập nhật model khi chọn
-          className="model-selector__select"
-          disabled={isLoadingModels}  // Disable khi đang load
-        >
-          {/* Render danh sách models từ backend */}
-          {Object.keys(availableModels).map((key) => {
-            const model = availableModels[key];
-            return (
-              <option
-                key={key}
-                value={key}
-                disabled={!model.available}  // Disable model không khả dụng
-              >
-                {model.name} {!model.available ? "(Không khả dụng)" : ""}
-              </option>
-            );
-          })}
-        </select>
-      </div>
+          {/* Dropdown chọn model để sử dụng */}
+          <ModelSelector
+            modelType={modelType}
+            availableModels={availableModels}
+            isLoading={isLoadingModels}
+            onChange={setModelType}
+          />
 
-      <canvas
-        ref={canvasRef}
-        className="drawing-board__canvas"
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-      />
+          <canvas
+            ref={canvasRef}
+            className="drawing-board__canvas"
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+          />
 
-      <div className="drawing-board__actions">
-        <button type="button" onClick={handlePredict}>
-          Nhận diện
-        </button>
-        <button type="button" className="button-secondary" onClick={handleClear}>
-          Xóa
-        </button>
-      </div>
+          <div className="drawing-board__actions">
+            <button type="button" onClick={handlePredict}>
+              Nhận diện
+            </button>
+            <button type="button" className="button-secondary" onClick={handleClear}>
+              Xóa
+            </button>
+          </div>
 
-      <div className="drawing-board__result">
-        {prediction === null ? (
-          <span>Hãy vẽ một số để nhận diện.</span>
-        ) : (
-          <span>
-            Kết quả nhận diện:
-            <strong>{` ${prediction}`}</strong>
-            <br />
-            {availableModels[modelType] && (
-              <span className="result__model-info">
-                {" "}(Model: {availableModels[modelType].name})
+          <div className="drawing-board__result">
+            {prediction === null ? (
+              <span>
+                {currentModel?.category === "number" && "Hãy vẽ một số để nhận diện."}
+                {currentModel?.category === "shape" && "Hãy vẽ một hình dạng để nhận diện."}
+                {currentModel?.category === "char" && "Hãy vẽ một chữ cái để nhận diện."}
+                {!currentModel && "Đang tải..."}
+              </span>
+            ) : (
+              <span>
+                Kết quả nhận diện:
+                <strong>{` ${prediction}`}</strong>
+                <br />
+                {currentModel && (
+                  <span className="result__model-info">
+                    {" "}(Model: {currentModel.name})
+                  </span>
+                )}
               </span>
             )}
-          </span>
-        )}
+          </div>
+        </div>
       </div>
+
+      {hasPreprocessSteps && <PreprocessPanel steps={preprocessSteps} />}
     </div>
   );
 };
