@@ -48,10 +48,11 @@ const DrawingBoard = () => {
         if (response.ok) {
           const data = await response.json();
           setAvailableModels(data.models);
+          console.log(data.models);
           
-          // Tự động chọn model đầu tiên có sẵn làm mặc định
+          // Tự động chọn model đầu tiên có sẵn làm mặc định (loại trừ shape)
           const available = Object.keys(data.models).filter(
-            key => data.models[key].available
+            key => data.models[key].available && data.models[key].category !== "shape"
           );
           if (available.length > 0) {
             setModelType(available[0]);

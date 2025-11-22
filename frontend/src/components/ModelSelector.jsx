@@ -12,18 +12,24 @@ const ModelSelector = ({ modelType, availableModels, isLoading, onChange }) => (
       className="model-selector__select"
       disabled={isLoading}
     >
-      {Object.keys(availableModels).map((key) => {
-        const model = availableModels[key];
-        return (
-          <option
-            key={key}
-            value={key}
-            disabled={!model.available}
-          >
-            {model.name} {!model.available ? "(Không khả dụng)" : ""}
-          </option>
-        );
-      })}
+      {Object.keys(availableModels)
+        .filter((key) => {
+          const model = availableModels[key];
+          // Temporarily filter out shape models
+          return model.category !== "shape";
+        })
+        .map((key) => {
+          const model = availableModels[key];
+          return (
+            <option
+              key={key}
+              value={key}
+              disabled={!model.available}
+            >
+              {model.name} {!model.available ? "(Không khả dụng)" : ""}
+            </option>
+          );
+        })}
     </select>
   </div>
 );
